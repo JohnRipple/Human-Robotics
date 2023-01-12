@@ -1,0 +1,11 @@
+my_turtle: {background_b: 255, background_g: 86, background_r: 69}
+rosdistro: 'melodic
+
+  '
+roslaunch:
+  uris: {host_zoidberg__37587: 'http://zoidberg:37587/'}
+rosversion: '1.14.13
+
+  '
+run_id: 5874aab8-91ef-11ed-b082-a86daa4c49b5
+turtlesim: {background_b: 255, background_g: 86, background_r: 150, name: my_turtle}
