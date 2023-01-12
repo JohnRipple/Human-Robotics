@@ -1,0 +1,8 @@
+prefix=/home/john/Human-Robotics/devel
+
+Name: ripple_tutorials
+Description: Description of ripple_tutorials
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 
