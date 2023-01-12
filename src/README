@@ -1,0 +1,9 @@
+John Ripple Project 1 Part 1 
+
+How to run:
+1) Move ripple_tutorials into catkin_ws
+2) cd ~/catking_ws
+3) source devel/setup.bash
+4) roscore
+5) Open a new terminal and run: 
+    roslaunch ripple_tutorials ripple_tutorials.launch 
