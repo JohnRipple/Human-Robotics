@@ -1,0 +1,2 @@
+ripple_tutorials
+-DCATKIN_DEVEL_PREFIX=/home/john/Human-Robotics/Project1_P1/devel -DCMAKE_INSTALL_PREFIX=/home/john/Human-Robotics/Project1_P1/install -G Unix Makefiles
