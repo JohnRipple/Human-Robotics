@@ -1,0 +1,8 @@
+prefix=/home/john/Human-Robotics/Project1_P2/devel
+
+Name: ripple_drawM
+Description: Description of ripple_drawM
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 
