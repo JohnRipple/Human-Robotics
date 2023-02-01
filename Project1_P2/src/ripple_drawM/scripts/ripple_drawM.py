@@ -23,7 +23,7 @@ def ripple_drawM(bound):
     
     pub = rospy.Publisher('/turtle1/cmd_vel', Twist, queue_size=10) # Publish to the topic /turtle1/cmd_vel
     rospy.init_node('ripple_drawM', anonymous=False)    # Initialize the drawM node
-    rate = rospy.Rate(40) # 39.8hz Made the M come out fairly well
+    rate = rospy.Rate(100)
     msg = Twist()   # Use Twist data type for published data
 
     msg.linear.x = 0
@@ -35,13 +35,15 @@ def ripple_drawM(bound):
     new_pose = [pose.x + bound[0], pose.y + bound[1]]   # Use an offset distance from the last moved spot
 
     stop, boundx, boundy = 0, 0, 0
-    epsilon = 0.05
+    epsilon = 0.02
     d = math.sqrt((new_pose[0] - pose.x)**2+(new_pose[1] - pose.y)**2)  # distance 
     dprev = d
-    while ((stop == 0)):
+    while (d > epsilon and dprev >= d):
         sign = 1
         listener()  # Get the current pose of the turtle
+        dprev = d
         d = math.sqrt((new_pose[0] - pose.x)**2+(new_pose[1] - pose.y)**2)
+        
         # Normalize the offset values to use for speed values
         if (bound[1] != 0):
             boundy = abs(bound[1] / bound[1])
@@ -50,19 +52,16 @@ def ripple_drawM(bound):
         if (bound[0] != 0 and bound[1] != 0):
             boundx = abs(bound[0]/ bound[1])
 
-        if (d > epsilon and dprev >= d):
-            if bound[1] < 0:
-                sign = -1
-            msg.linear.y = boundy * 3 * sign
-            sign = 1
-            if bound[0] < 0:
-                sign = -1
-            msg.linear.x = boundx * 3 * sign
-        else:
-            stop = 1
+        if bound[1] < 0:
+            sign = -1
+        msg.linear.y = boundy * 5 * sign
+        sign = 1
+        if bound[0] < 0:
+            sign = -1
+        msg.linear.x = boundx * 5 * sign
 
-        dprev = d
-        #rospy.loginfo(pose)
+        print("d: %.3f\tdprev: %.3f" % (d, dprev))
+        # rospy.loginfo(pose)
         pub.publish(msg)    # Publish the x,y speed information
         rate.sleep()
         
@@ -70,7 +69,6 @@ def ripple_drawM(bound):
     listener()
     msg.linear.x = 0
     msg.linear.y = 0
-    rospy.loginfo(pose)
     pub.publish(msg)
     rate.sleep()
 
@@ -91,8 +89,8 @@ if __name__ == '__main__':
         # Draw the mirrored half of the M
         for i in bounds[::-1]:
             ripple_drawM([i[0], -1 * i[1]])
-        ripple_drawM([0.39, -0.39*8.0/5.0])
-        ripple_drawM([0.39, 0.39*8.0/5.0]) # Close a small gap where both halfs of the M meet
+        ripple_drawM([0.4, -0.4*8.0/5.0])
+        ripple_drawM([0.4, 0.4*8.0/5.0]) # Close a small gap where both halfs of the M meet
 
     except rospy.ROSInterruptException:
         pass
