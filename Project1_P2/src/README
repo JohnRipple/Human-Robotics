@@ -1,0 +1,18 @@
+John Ripple
+Project 1 Part 2
+Human Centered Robotics
+2/5/2023
+
+How to run ripple_lastname.py
+1) Start roscore and turtlesim
+	roscore
+	rosrun turtlesim turtlesim_node
+2) Move ripple_drawM into catkinws/src
+3) catkin_make
+4) Open a new terminal in catkin_ws and source environment
+	source devel/setup.bash
+5) rosrun ripple_drawM ripple_drawM.py
+
+If you want to run again
+1) rosservice call /reset
+2) rosrun ripple_drawM ripple_drawM.py
