@@ -3,6 +3,7 @@
 # Human Centered Robotics
 # Project 1 Part 2
 # 1/30/2023
+# With reference to http://wiki.ros.org/turtlesim/Tutorials/Go%20to%20Goal
 
 import rospy
 from std_msgs.msg import String
@@ -10,87 +11,105 @@ from geometry_msgs.msg import Twist
 from turtlesim.msg import Pose
 import math
 
-pose = Pose()   # global pose variable
+class TurtleBot:
+
+    def __init__(self):
+            """Initializes node, publisher, and subscriber when object is created"""
+            rospy.init_node('ripple_drawM', anonymous=False)    # Initialize the drawM node
+            self.velocity_publisher = rospy.Publisher('/turtle1/cmd_vel', Twist, queue_size=10) # Publish to the topic /turtle1/cmd_vel
+            self.pose_subscriber = rospy.Subscriber("/turtle1/pose", Pose , self.update_pos)
+            self.pose = Pose()
+            self.rate = rospy.Rate(50) # 100 hz
 
 
-def callback(data):
-    global pose
-    pose = data # set the pose to the subscribed data of /turtlesim/Pose
+    def update_pos(self, data):
+          """Callback function when the Pose message type is recieved by the subscriber"""
+          self.pose = data
 
 
-def ripple_drawM(bound):
-    global pose
+    def distance(self, goal_pose):
+          """Distance between goal and current position"""
+          return math.sqrt((goal_pose.x - self.pose.x)**2 + (goal_pose.y - self.pose.y)**2)
     
-    pub = rospy.Publisher('/turtle1/cmd_vel', Twist, queue_size=10) # Publish to the topic /turtle1/cmd_vel
-    rospy.init_node('ripple_drawM', anonymous=False)    # Initialize the drawM node
-    rate = rospy.Rate(100)
-    msg = Twist()   # Use Twist data type for published data
 
-    msg.linear.x = 0
-    msg.linear.y = 0
-    pub.publish(msg)
-    listener()
-    rospy.loginfo(pose)
+    def linear_vel(self, goal_pose, constant=1.5):
+          """Linear velocity in x direction based on distance to goal"""
+          return constant * self.distance(goal_pose) + 1
+    
 
-    new_pose = [pose.x + bound[0], pose.y + bound[1]]   # Use an offset distance from the last moved spot
+    def steering_angle(self, goal_pose):
+          """Triangle angle between the two points: tan^-1(y/x)"""
+          return math.atan2(goal_pose.y - self.pose.y, goal_pose.x - self.pose.x)
+    
 
-    stop, boundx, boundy = 0, 0, 0
-    epsilon = 0.02
-    d = math.sqrt((new_pose[0] - pose.x)**2+(new_pose[1] - pose.y)**2)  # distance 
-    dprev = d
-    while (d > epsilon and dprev >= d):
-        sign = 1
-        listener()  # Get the current pose of the turtle
-        dprev = d
-        d = math.sqrt((new_pose[0] - pose.x)**2+(new_pose[1] - pose.y)**2)
-        
-        # Normalize the offset values to use for speed values
-        if (bound[1] != 0):
-            boundy = abs(bound[1] / bound[1])
-        else: 
-            boundx = abs(bound[0] / bound[0])
-        if (bound[0] != 0 and bound[1] != 0):
-            boundx = abs(bound[0]/ bound[1])
+    def angle_dist(self, goal_pose):
+          """Find the angular distance to rotate"""
+          return self.steering_angle(goal_pose) - self.pose.theta
+    
+    
+    def angular_vel(self, goal_pose, constant=6):
+          """Angular velocity to travel to get to the pose"""
+          return constant * self.angle_dist(goal_pose)
+    
 
-        if bound[1] < 0:
-            sign = -1
-        msg.linear.y = boundy * 5 * sign
-        sign = 1
-        if bound[0] < 0:
-            sign = -1
-        msg.linear.x = boundx * 5 * sign
+    def move2goal(self, x, y):
+        """Move the turtle to the goal"""
+        goal_pose = Pose()
+        goal_pose.x = self.pose.x + x   # Goal is current position + offset from bound
+        goal_pose.y = self.pose.y + y
 
-        print("d: %.3f\tdprev: %.3f" % (d, dprev))
-        # rospy.loginfo(pose)
-        pub.publish(msg)    # Publish the x,y speed information
-        rate.sleep()
-        
-    # Set the turtle speed to 0 after it finishes moving
-    listener()
-    msg.linear.x = 0
-    msg.linear.y = 0
-    pub.publish(msg)
-    rate.sleep()
+        # Tolerances
+        distance_tolerance = 0.05
+        angle_tolerance = 0.0001
 
+        vel_msg = Twist()
 
-# create the subscriber to listen to the /turtle1/pose information
-def listener():
-    sub = rospy.Subscriber("/turtle1/pose", Pose , callback)
+        angled = False
+        distance_prev = self.distance(goal_pose)
+
+        # Loop while not at the goal
+        while self.distance(goal_pose) >= distance_tolerance and distance_prev >= self.distance(goal_pose):
+            distance_prev = self.distance(goal_pose)    # Assign current distance to previous distance
+
+            # Either rotate or move but not both at the same time, only turns once
+            if abs(self.angle_dist(goal_pose)) >= angle_tolerance and angled == False:
+                    vel_msg.angular.z = self.angular_vel(goal_pose, 20)
+                    vel_msg.linear.x = 0
+                    #print(self.angle_dist(goal_pose))
+            else:
+                    vel_msg.angular.z = 0
+                    vel_msg.linear.x = self.linear_vel(goal_pose, 20)
+                    angled = True
+                    # print("Goal X: %.4f\tGoal y: %.4f" %(goal_pose.x, goal_pose.y))
+                    # print(self.pose)
+            self.velocity_publisher.publish(vel_msg)
+            self.rate.sleep()
+
+        # Stop the turtle from moving once reaching the goal
+        vel_msg.angular.z = 0
+        vel_msg.linear.x = 0
+        self.velocity_publisher.publish(vel_msg)
+        self.rate.sleep()
+
 
 if __name__ == '__main__':
     try:
-        bounds = [[3.0*5.0/8.0, 3.0], [0, -3], [-0.4, 0], [0, -1], [2, 0], [0, 1], [-0.4, 0], [0, 4], [0.4, 0], [0, 1], [-2, 0], [-3.0*5.0/8.0, -3.0]]    # x,y bounds 0 means it doesn't change
-        #bounds = [[5.54+1.9, 5.54+3.0]]
-        # Draw half the M
-        for i in bounds:
-            listener()
-            ripple_drawM(i)
+        turtle = TurtleBot()
+        offsets = [[3.0*5.0/8.0, 3.0], [0, -3], [-0.4, 0], [0, -1], [2, 0], [0, 1], [-0.4, 0], [0, 4], [0.4, 0], [0, 1], [-2, 0], [-3.0*5.0/8.0, -3.0]]    # x,y bounds 0 means it doesn't change
+        
+        # run once so the system can publish the pose before moving
+        turtle.rate.sleep()
+        turtle.move2goal(0, 0)
 
-        # Draw the mirrored half of the M
-        for i in bounds[::-1]:
-            ripple_drawM([i[0], -1 * i[1]])
-        ripple_drawM([0.4, -0.4*8.0/5.0])
-        ripple_drawM([0.4, 0.4*8.0/5.0]) # Close a small gap where both halfs of the M meet
+        # Move the turtle
+        for offset in offsets:
+                turtle.move2goal(offset[0], offset[1])
+        for offset in offsets[::-1]:
+            turtle.move2goal(offset[0], -1 * offset[1])
+        turtle.move2goal(0.4, -0.4*8.0/5.0) # Close a small gap where both halfs of the M meet
+        turtle.move2goal(0.4, 0.4*8.0/5.0) 
 
     except rospy.ROSInterruptException:
         pass
+
+                      
