@@ -1,0 +1,13 @@
+John Ripple
+Human Centered Robotics CSCI 473
+Project 2 Part 1
+
+1) Topics with data
+/scan contains LaserScan data (lidar)
+/odom contains odometry about the robot
+/joint_states contains info about the joints of the robot
+
+2) Topics to control input to Gazebo simulation
+/move_base node sends /cmd_vel to gazebo simulation
+/cmd_vel topic is used to control gazebo
+
