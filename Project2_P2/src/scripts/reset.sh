@@ -1,0 +1,2 @@
+rosservice call /gazebo/reset_simulation
+rosrun ripple_wallFollowing ripple_wallFollowing.py

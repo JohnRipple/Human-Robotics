@@ -1,0 +1,8 @@
+prefix=/home/john/Human-Robotics/Project2_P2/install
+
+Name: ripple_wallFollowing
+Description: Description of ripple_wallFollowing
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 
