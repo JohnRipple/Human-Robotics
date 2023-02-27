@@ -11,6 +11,7 @@ from geometry_msgs.msg import Twist
 from turtlesim.msg import Pose
 from sensor_msgs.msg import LaserScan
 import math
+from itertools import chain
 
 class Triton:
 
@@ -20,98 +21,60 @@ class Triton:
             self.velocity_publisher = rospy.Publisher('/cmd_vel', Twist, queue_size=10) # Publish to the topic /turtle1/cmd_vel
             self.lidar_subscriber = rospy.Subscriber("/scan", LaserScan , self.update_scan)
             self.lidar = LaserScan()
+            self.regions = {
+                 'right' : 0,
+                 'front' : 0,
+                 'left' : 0
+            }
             self.rate = rospy.Rate(50) # in hz
 
 
     def update_scan(self, data):
-          """Callback function when the Pose message type is recieved by the subscriber"""
-          self.lidar = data
-
-
-    # def distance(self, goal_pose):
-    #       """Distance between goal and current position"""
-    #       return math.sqrt((goal_pose.x - self.pose.x)**2 + (goal_pose.y - self.pose.y)**2)
-    
-
-    # def linear_vel(self, goal_pose, constant=1.5):
-    #       """Linear velocity in x direction based on distance to goal"""
-    #       return constant * self.distance(goal_pose) + 1
-    
-
-    # def steering_angle(self, goal_pose):
-    #       """Triangle angle between the two points: tan^-1(y/x)"""
-    #       return math.atan2(goal_pose.y - self.pose.y, goal_pose.x - self.pose.x)
-    
-
-    # def angle_dist(self, goal_pose):
-    #       """Find the angular distance to rotate"""
-    #       return self.steering_angle(goal_pose) - self.pose.theta
-    
-    
-    # def angular_vel(self, goal_pose, constant=6):
-    #       """Angular velocity to travel to get to the pose"""
-    #       return constant * self.angle_dist(goal_pose)
-
-
-    # def move2goal(self, x, y):
-    #     """Move the turtle to the goal"""
-    #     goal_pose = Pose()
-    #     goal_pose.x = self.pose.x + x   # Goal is current position + offset from bound
-    #     goal_pose.y = self.pose.y + y
-
-    #     # Tolerances
-    #     distance_tolerance = 0.05
-    #     angle_tolerance = 0.0001
-
-    #     vel_msg = Twist()
-
-    #     angled = False
-    #     distance_prev = self.distance(goal_pose)
-
-    #     # Loop while not at the goal
-    #     while self.distance(goal_pose) >= distance_tolerance and distance_prev >= self.distance(goal_pose):
-    #         distance_prev = self.distance(goal_pose)    # Assign current distance to previous distance
-
-    #         # Either rotate or move but not both at the same time, only turns once
-    #         if abs(self.angle_dist(goal_pose)) >= angle_tolerance and angled == False:
-    #                 vel_msg.angular.z = self.angular_vel(goal_pose, 20)
-    #                 vel_msg.linear.x = 0
-    #                 #print(self.angle_dist(goal_pose))
-    #         else:
-    #                 vel_msg.angular.z = 0
-    #                 vel_msg.linear.x = self.linear_vel(goal_pose, 20)
-    #                 angled = True
-    #                 # print("Goal X: %.4f\tGoal y: %.4f" %(goal_pose.x, goal_pose.y))
-    #                 # print(self.pose)
-    #         self.velocity_publisher.publish(vel_msg)
-    #         self.rate.sleep()
-
-    #     # Stop the turtle from moving once reaching the goal
-    #     vel_msg.angular.z = 0
-    #     vel_msg.linear.x = 0
-    #     self.velocity_publisher.publish(vel_msg)
-    #     self.rate.sleep()
+        """Callback function when the Pose message type is recieved by the subscriber"""
+        # angle_min = 0
+        # angle_max = 360
+        # len(ranges) = 360   one datapoint per degree
+        self.lidar = data
+        offset = 20
+        self.regions = {
+            'right' : min(self.lidar.ranges[270-offset:270+offset]),
+            'front' : min(chain(self.lidar.ranges[0:offset], self.lidar.ranges[359-offset:359])),
+            'left' : min(self.lidar.ranges[90-offset:90+offset])
+        }
 
 
     def publishData(self, vel_msg):
         self.velocity_publisher.publish(vel_msg)
         self.rate.sleep()
 
+    def forward(self):
+         # Go forward
+         # Keep the horizontal distance correct
+         a = 0
+
+
+
 
     def followWall(self):
         j = 0
         vel_msg = Twist()
-        while j < 300:
+        for_dist = 10
+        desired_dist = 0.6
+        gain = 0.5
+        error = for_dist
+        tolerance = 0.01
+        while error > tolerance:
             j = j + 1 
-            #print(self.lidar)
-            vel_msg.linear.x = 0.22
-            print(vel_msg)
+            if (len(self.lidar.ranges) > 0):
+                for_dist = self.regions('front')
+                print(for_dist)
+            vel_msg.linear.x = gain*error
+            error = for_dist - desired_dist
+            #print(vel_msg)
             self.publishData(vel_msg)
         vel_msg.linear.x = 0
         self.publishData(vel_msg)
     
-
-
 
 if __name__ == '__main__':
     try:

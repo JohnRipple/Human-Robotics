@@ -1,0 +1,2 @@
+export TURTLEBOT3_MODEL=waffle_pi
+roslaunch ripple_wallFollowing maze.launch
