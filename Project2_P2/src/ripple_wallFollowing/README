@@ -1,0 +1,21 @@
+John Ripple
+Project 2 Part 2
+Human Centered Robotics
+3/8/2023
+
+How to run wall following robot
+1) Start roscore and set the robot environment variable
+	roscore
+	export TURTLEBOT3_MODEL=waffle_pi
+2) Move ripple_wallFollowing into catkinws/src
+3) catkin_make
+4) Open a new terminal in catkin_ws and source environment
+	source devel/setup.bash
+5) roslaunch ripple_wallFollowing ripple_wallFollowing.launch
+
+If you want to reset and run again without closing gazebo
+1) rosservice call /gazebo/reset_simulation
+2) rosrun ripple_wallFollowing ripple_wallFollowing.py
+
+Video Link to robot working
+https://www.youtube.com/watch?v=S88QkTokHWQ
