@@ -22,9 +22,12 @@ class Triton:
             self.velocity_publisher = rospy.Publisher('/cmd_vel', Twist, queue_size=10) # Publish to the topic /turtle1/cmd_vel
             self.lidar_subscriber = rospy.Subscriber("/scan", LaserScan , self.update_scan)
             self.lidar = LaserScan()
-            self.state = 5
-            self.stateDesc = ''
-            self.desired_dist = 1
+            self.action = 5
+            self.actionDesc = ''
+            self.desired_dist = 0.7
+            self.pid = PID(0.5, 0.5, 0.01)
+            self.pid.setpoint = self.desired_dist - 0.3
+            self.pid.sample_time = 1.0/50
             self.regions = {
                  'right' : 0,
                  'front' : 0,
@@ -47,7 +50,7 @@ class Triton:
             'front' : min(chain(self.lidar.ranges[0:offset], self.lidar.ranges[359-offset:359])),
             'left' : min(self.lidar.ranges[left-offset:left+offset])
         }
-        self.action()
+        self.chooseState()
 
 
     def publishData(self, vel_msg):
@@ -58,7 +61,7 @@ class Triton:
     def findWall(self):
         msg = Twist()
         msg.linear.x = 0.22
-        if self.state is not 5:
+        if self.action is not 5:
             msg.angular.z = -0.3
         else:
             msg.angular.z = 0
@@ -79,54 +82,64 @@ class Triton:
 
     def followWall(self):
         msg = Twist()
+        gain = 0.5
+        
+        # print(self.lidar.ranges[300] - self.lidar.ranges[240])
 
-        if self.lidar.ranges[300] > self.lidar.ranges[240]:
+        if abs(self.regions['right'] - (self.desired_dist-0.3)) > 0.03:
+            # if abs(self.lidar.ranges[240] - self.regions['right']) > 0.12:
+            #     gain = 0
+            msg.angular.z = gain * (self.desired_dist - 0.3 - self.regions['right'])
+            msg.linear.x = 0.1
+            print((self.lidar.ranges[300] - self.lidar.ranges[240]))
+        elif self.lidar.ranges[300] > self.lidar.ranges[240]:
             msg.angular.z = -1 * abs(self.lidar.ranges[300] - self.lidar.ranges[240]) 
         else:
             msg.angular.z = 1 * abs(self.lidar.ranges[300] - self.lidar.ranges[240])
-        # print(self.lidar.ranges[300] - self.lidar.ranges[240])
-
-        if abs(self.regions['right'] - 0.3) > 0.02:
-            msg.angular.z = 0.5 * (0.3 - self.regions['right'])
-        msg.linear.x = 0.22
+        
+        if (self.lidar.ranges[300] - self.lidar.ranges[240]) < 0.1:
+            msg.linear.x = 0.22
+        else:
+            msg.linear.x = 0.1
+        msg.angular.z = max(min(msg.angular.z, 0.2), -0.2)
+        #msg.angular.z = self.pid(self.regions['right'])
         return msg
 
 
-    def changeState(self, state):
-        if state is not self.state:
-            print(self.stateDesc)
-            self.state = state
+    def changeAction(self, action):
+        if action is not self.action:
+            print(self.actionDesc)
+            self.action = action
 
-    def action(self):
-        desired_dist = self.desired_dist
+    def chooseState(self):
 
-        if self.regions['front'] > desired_dist and self.regions['left'] > desired_dist and self.regions['right'] > desired_dist:
-            if self.state is not 5:
-                self.stateDesc = 'Case 0: Nothing'
-                self.changeState(0)
-        elif self.regions['front'] < desired_dist and self.regions['left'] > desired_dist and self.regions['right'] > desired_dist:
-            self.stateDesc = "Case 1: Front"
-            self.changeState(1)
-        elif self.regions['front'] > desired_dist and self.regions['left'] > desired_dist and self.regions['right'] < desired_dist:
-            self.stateDesc = "Case 2: Right"
-            self.changeState(3)
-        elif self.regions['front'] > desired_dist and self.regions['left'] < desired_dist and self.regions['right'] > desired_dist:
-            self.stateDesc = "Case 3: Left"
-            self.changeState(0) 
-        elif self.regions['front'] < desired_dist and self.regions['left'] > desired_dist and self.regions['right'] < desired_dist:
-            self.stateDesc = "Case 4: Front and Right"
-            self.changeState(1)
-        elif self.regions['front'] < desired_dist and self.regions['left'] < desired_dist and self.regions['right'] > desired_dist:
-            self.stateDesc = "Case 5: Front and Left"
-            self.changeState(1)
-        elif self.regions['front'] < desired_dist and self.regions['left'] < desired_dist and self.regions['right'] < desired_dist:
-            self.stateDesc = "Case 6: Front, Left, and Right"
-            self.changeState(1)
-        elif self.regions['front'] > desired_dist and self.regions['left'] < desired_dist and self.regions['right'] < desired_dist:
-            self.stateDesc = "Case 7: Left and Right"
-            self.changeState(0)
+        if self.regions['front'] > self.desired_dist and self.regions['left'] > self.desired_dist and self.regions['right'] > self.desired_dist:
+            if self.action is not 5:
+                self.actionDesc = 'Case 0: Nothing'
+                self.changeAction(0)
+        elif self.regions['front'] < self.desired_dist and self.regions['left'] > self.desired_dist and self.regions['right'] > self.desired_dist:
+            self.actionDesc = "Case 1: Front"
+            self.changeAction(1)
+        elif self.regions['front'] > self.desired_dist and self.regions['left'] > self.desired_dist and self.regions['right'] < self.desired_dist:
+            self.actionDesc = "Case 2: Right"
+            self.changeAction(3)
+        elif self.regions['front'] > self.desired_dist and self.regions['left'] < self.desired_dist and self.regions['right'] > self.desired_dist:
+            self.actionDesc = "Case 3: Left"
+            self.changeAction(0) 
+        elif self.regions['front'] < self.desired_dist and self.regions['left'] > self.desired_dist and self.regions['right'] < self.desired_dist:
+            self.actionDesc = "Case 4: Front and Right"
+            self.changeAction(1)
+        elif self.regions['front'] < self.desired_dist and self.regions['left'] < self.desired_dist and self.regions['right'] > self.desired_dist:
+            self.actionDesc = "Case 5: Front and Left"
+            self.changeAction(1)
+        elif self.regions['front'] < self.desired_dist and self.regions['left'] < self.desired_dist and self.regions['right'] < self.desired_dist:
+            self.actionDesc = "Case 6: Front, Left, and Right"
+            self.changeAction(1)
+        elif self.regions['front'] > self.desired_dist and self.regions['left'] < self.desired_dist and self.regions['right'] < self.desired_dist:
+            self.actionDesc = "Case 7: Left and Right"
+            self.changeAction(3)
         else:
-            self.stateDesc = "Unknown Case"    
+            self.actionDesc = "Unknown Case"    
 
 
     def printLidar(self):
@@ -141,21 +154,18 @@ class Triton:
         right_last = self.regions['right']
         error_right = 1
         while not rospy.is_shutdown():
-            if self.state == 0:
+            if self.action == 0 or self.action == 5:
                 vel_msg = self.findWall()
-            elif self.state == 1:
+            elif self.action == 1:
                 vel_msg = self.turnLeft()
-            elif self.state == 2:
+            elif self.action == 2:
                 vel_msg = self.turnRight()
-            elif self.state == 3:
+            elif self.action == 3:
                 vel_msg = self.followWall()
-                # vel_msg.angular.z = 3 * (0.3 - self.regions['right']) + (self.regions['right'] - right_last)*30
-            elif self.state == 5:
-                vel_msg = self.findWall()
             else:
                 print("Naughty robot found an edge case")
             right_last = self.regions['right']
-            # self.printLidar()
+            #self.printLidar()
             self.publishData(vel_msg)
             self.rate.sleep()
         vel_msg.linear.x = 0
