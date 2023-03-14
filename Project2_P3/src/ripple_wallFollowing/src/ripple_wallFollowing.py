@@ -15,6 +15,8 @@ from itertools import chain
 import pickle
 import math
 import random
+import os
+import sys
 
 
 class Triton:
@@ -52,7 +54,8 @@ class Triton:
             readQTable = True
             try:
                 if readQTable:
-                    pkl_file = open('/home/john/Human-Robotics/Project2_P3/src/ripple_wallFollowing/src/qTable.pkl', 'rb')
+                    # pkl_file = open('/home/john/Human-Robotics/Project2_P3/src/ripple_wallFollowing/src/qTable.pkl', 'rb')
+                    pkl_file = open(os.path.join(sys.path[0], "qTable.pkl"), 'rb')
                     self.q = pickle.load(pkl_file)
                     pkl_file.close()
                     print("Read in Q Table")
@@ -241,9 +244,10 @@ if __name__ == '__main__':
     except rospy.ROSInterruptException:
         print("\nExiting\nQ Table:")
         print(triton.q)
-        output = open('/home/john/Human-Robotics/Project2_P3/src/ripple_wallFollowing/src/qTable.pkl', 'wb')
-        pickle.dump(triton.q, output)
-        output.close()
+        if raw_input("Save File? y/n: ") == 'y':
+            output = open('/home/john/Human-Robotics/Project2_P3/src/ripple_wallFollowing/src/qTable.pkl', 'wb')
+            pickle.dump(triton.q, output)
+            output.close()
         pass
 
                       
