@@ -57,7 +57,14 @@ class Triton:
                         [0, 1, 0],    # State 5: Front and Left
                         [-26.682280438795782, -13.338257303375574, -22.846608172632394],    # State 6: Front, Left, and Right
                         [2.832833138913845, 1.045735425615309, 2.167094291252819]]    # State 7: Left and Right
-            readQTable = False
+            try:
+                readQTable = rospy.get_param('/ripple_wallFollow/readQTable')
+            except:
+                readQTable = False
+            try:
+                self.train = rospy.get_param('/ripple_wallFollow/train')
+            except:
+                self.train = False
             try:
                 if readQTable:
                     # pkl_file = open('/home/john/Human-Robotics/Project2_P3/src/ripple_wallFollowing/src/qTable.pkl', 'rb')
@@ -101,12 +108,8 @@ class Triton:
     def findWall(self):
         """Find a wall by going forward only for the first state and then go forward and slightly turn"""
         msg = Twist()
-
         msg.linear.x = 0.3
         msg.angular.z = -0.3
-        # if self.regions['rear'] < self.desired_dist*1.5:
-        #     msg.linear.x = 0.05
-        #     msg.angular.z = -3
         return msg
 
 
@@ -130,7 +133,6 @@ class Triton:
         msg = Twist()
         gain = 3
         offset = 20
-        #msg.angular.z = max(min(0.5* (self.lidar.ranges[270-offset] - self.lidar.ranges[270+offset]), 2.0), -2.0)
         if self.regions['right'] < self.desired_dist*1.5:
             msg.angular.z = max(min((self.rightIndex-270) * 0.015, 2.0), -2.0)
             msg.linear.y = max(min(gain * (self.desired_dist - 0.3 - self.regions['right']), 0.3), -0.3)
@@ -145,8 +147,8 @@ class Triton:
         #epsilon = self.exp(0.1, 10*60, rospy.get_time())
         epsilon = 0.98*0.98**(self.episode/10.0)
         p = random.random()
-        p = 5
-        if p < epsilon:
+        # p = 5
+        if p < epsilon and self.train:
             action = random.randint(0,2)    # Choose random action
         else:
             action = action.index(max(action))
@@ -203,8 +205,6 @@ class Triton:
         if self.regions['right'] < .13 or self.regions['front'] < .13 or self.regions['left'] < .13:
             # Penalize for being too close to the wall
             return -1
-        # if x - offset > 2*self.desired_dist:
-        #     return 0
         if x > offset:
             return self.exp(y_desired,x_desired, x, offset)
         else:
@@ -282,13 +282,15 @@ class Triton:
             else:
                 print("Naughty robot found an edge case")
             
-            self.q[self.state][self.action] = self.q[self.state][self.action] + self.alpha*(self.reward+self.gamma*max(self.q[self.state]) - self.q[self.state][self.action])
             #self.printLidar()
+            
+            if self.train:
+                self.q[self.state][self.action] = self.q[self.state][self.action] + self.alpha*(self.reward+self.gamma*max(self.q[self.state]) - self.q[self.state][self.action])
+                if self.regions['right'] > self.desired_dist:
+                    self.wallTime = rospy.get_time()
+                if (rospy.get_time() - self.time > 0.5*60) or (self.regions['right'] < self.desired_dist and rospy.get_time() - self.wallTime > 180) or (self.regions['right'] < .13 or self.regions['front'] < .13 or self.regions['left'] < .13 or self.regions['rear'] < .13):
+                    self.resetEpisode()
             self.publishData(vel_msg)
-            if self.regions['right'] > self.desired_dist:
-                self.wallTime = rospy.get_time()
-            if (rospy.get_time() - self.time > 0.5*60) or (self.regions['right'] < self.desired_dist and rospy.get_time() - self.wallTime > 180) or (self.regions['right'] < .13 or self.regions['front'] < .13 or self.regions['left'] < .13 or self.regions['rear'] < .13):
-                self.resetEpisode()
             self.rate.sleep()
         # Stop the robot from moving
         vel_msg.linear.x = 0
@@ -302,15 +304,13 @@ if __name__ == '__main__':
     try:
         triton.mainLoop()
 
-        
-
     except rospy.ROSInterruptException:
         print("\nExiting\nQ Table:")
         print(triton.q)
-        if raw_input("Save File? y/n: ") == 'y':
-            output = open('/home/john/Human-Robotics/Project2_P3/src/ripple_wallFollowing/src/qTable.pkl', 'wb')
-            pickle.dump(triton.q, output)
-            output.close()
+        # if raw_input("Save File? y/n: ") == 'y':
+        output = open(os.path.join(sys.path[0], "qTable.pkl"), 'wb')
+        pickle.dump(triton.q, output)
+        output.close()
         pass
 
                       

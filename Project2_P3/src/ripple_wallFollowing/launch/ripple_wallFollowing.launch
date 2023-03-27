@@ -1,5 +1,8 @@
 <launch>
     <arg name="world_file" default="worlds/largemaze-triton-lidar.world"/>
+    <arg name="train" default="False"/>
+    <arg name="readQTable" default="False"/>
+  
   
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
       <arg name="use_sim_time" value="true"/>
@@ -11,6 +14,9 @@
       <arg name="recording" value="false"/>
       
     </include>
-    <node pkg="ripple_wallFollowing" type="ripple_wallFollowing.py" name="ripple_wallFollow"/>
+    <node pkg="ripple_wallFollowing" type="ripple_wallFollowing.py" name="ripple_wallFollow">
+      <param name="train" value="$(arg train)"/>
+      <param name="readQTable" value="$(arg readQTable)"/>
+    </node> 
   
 </launch>
