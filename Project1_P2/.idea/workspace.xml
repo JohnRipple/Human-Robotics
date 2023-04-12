@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="f9439a4b-5d0d-4957-94df-1f040da32e79" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/../Project2_P3/src/ripple_wallFollowing/src/ripple_wallFollowing.py" beforeDir="false" afterPath="$PROJECT_DIR$/../Project2_P3/src/ripple_wallFollowing/src/ripple_wallFollowing.py" afterDir="false" />
-    </list>
+    <list default="true" id="f9439a4b-5d0d-4957-94df-1f040da32e79" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
   </component>
   <component name="ProjectId" id="2N3TO4R27ZFdi9ZBBIkJ7DKjA4M" />
   <component name="ProjectViewState">
@@ -17,7 +18,8 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true"
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "last_opened_file_path": "/home/john/Human-Robotics/Project3_P1"
   }
 }]]></component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />

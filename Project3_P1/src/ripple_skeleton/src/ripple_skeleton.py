@@ -19,6 +19,9 @@ class Skeleton:
         self.angle = []
         self.data = []
         self.writeData = ""
+        self.nan = False
+        self.hjpd_vec = []
+        self.hjpd_data = []
         
     def showHist(self, hist, bins):
         width = 0.7 * (bins[1] - bins[0])
@@ -38,7 +41,7 @@ class Skeleton:
             distHist, bins_dist = np.histogram(dist[i], bins=np.linspace(min(dist[i]), max(dist[i]), num = 20))
             distHist = distHist / float(len(dist[i]))
             self.writeData += ' '.join(map(str, distHist))
-            # print(distHist)
+            # self.showHist(distHist, bins_dist)
         self.writeData += ' '
         for i in range(0, len(angle)):
             angleHist, bins_angle = np.histogram(angle[i], bins=np.linspace(min(angle[i]), max(angle[i]), num = 20))
@@ -95,33 +98,72 @@ class Skeleton:
         # print(self.distance)
         # self.distance = []
         
-        
+    def stripData(self, line):
+        '''Converts read in line into list of floats while removing Nan frames'''
+        line = line.strip("\r\n").split(" ")
+        if '' in line:
+            # Removes extra whitespaces in data in case the line had two spaces next to each other
+            try:
+                while True:
+                    line.remove('')
+            except ValueError:
+                pass
+        for i in range(0, len(line)):
+            if line[i] == 'NaN':
+                self.nan = True
+            else:
+                line[i] = float(line[i])
+        return line
+
+
+    def calcJointDisplace(self):
+        ref_joint = 1   # Position 0 in self.data
+        hjpd_vec = []
+        # print(self.hjpd_data)
+        for i in range(1, len(self.hjpd_data)):
+            hjpd_vec.append(self.hjpd_data[i][2] - self.hjpd_data[0][2], self.hjpd_data[i][3] - self.hjpd_data[0][3], self.hjpd_data[i][4] - self.hjpd_data[0][4]))
+        print(hjpd_vec)
+        self.hjpd_vec.append(hjpd_vec)
+
+
+    def hjpd(self, line):
+        data = self.stripData(line)
+        self.hjpd_data.append(data)
+        if data[1] == 20:
+            if self.nan:
+                self.nan = False
+                print(self.hjpd_data)
+            else:
+                self.calcJointDisplace()
+            self.hjpd_data = []
+
+
     def findStar(self, line):
         '''Find the star joint positions for the RAD algorithim'''
-        desired_joints = [1, 4, 8, 12, 16, 20]  # Desired joint positions (hands, feet, head, hip center)
-        data = line.strip("\r\n").split(" ")
-        for i in range(0, len(data)):
-            if data[i] == 'NaN':
-                data[i] = 0.0
-            try:
-                data[i] = float(data[i])
-            except:
-                data[i] = 0.0
+        desired_joints = [1, 4, 8, 12, 16, 20]  # Desired joint positions (hands, feet, head, torso)
+        data = self.stripData(line)
         # print(data)
         if data[1] in desired_joints:
             self.data.append(data)
         if data[1] == 20:
-            # print(self.data)
-            self.calcDistance()
-            self.calcAngle()
+            # Don't add this frame of data to the histograms if it has NaNs in the frame
+            if not self.nan:
+                self.calcDistance() # Calculate distance between joints
+                self.calcAngle()    # Calculate angle between joints
             self.data = []
             self.frame = data[0]
     
     
     def mainLoop(self):
-        train = "train"
-        path = os.path.join(os.getcwd(), "src/ripple_skeleton/dataset/", train)
-        save_path = "src/ripple_skeleton/saved_files/rad_d1_train.txt"
+        train = True
+        if train:
+            dataset_path = "train"
+            save_path = "src/ripple_skeleton/saved_files/rad_d1_train.txt"
+        else:
+            dataset_path = "test"
+            save_path = "src/ripple_skeleton/saved_files/rad_d1_test.txt"
+        path = os.path.join(os.getcwd(), "src/ripple_skeleton/dataset/", dataset_path)
+        
         open(save_path, 'w').close()    # Clear contents of the file
         save_file = open(save_path, 'w')
         for filename in os.listdir(path):
@@ -133,7 +175,7 @@ class Skeleton:
                 self.frame = 1
                 for i, line in enumerate(f):
                     self.findStar(line)
-                
+                    self.hjpd(line)
                 self.calcHistogram()
                 save_file.write(self.writeData)
                 
