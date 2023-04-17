@@ -1,8 +1,0 @@
-prefix=/home/john/Human-Robotics/Project3_P1/install
-
-Name: ripple_skeleton
-Description: Description of ripple_skeleton
-Version: 0.0.0
-Cflags: 
-Libs: -L${prefix}/lib 
-Requires: 

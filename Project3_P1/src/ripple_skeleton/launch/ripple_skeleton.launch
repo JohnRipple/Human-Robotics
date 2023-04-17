@@ -1,8 +1,0 @@
-<launch>
-    <arg name="train" default="True"/>
-
-    <node pkg="ripple_skeleton" type="ripple_skeleton.py" name="ripple_skeleton">
-      <param name="train" value="$(arg train)"/>
-    </node> 
-  
-</launch>
