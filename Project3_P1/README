@@ -1,0 +1,48 @@
+John Ripple
+Project 1 Part 2
+Human Centered Robotics
+4/24/2023
+
+### Necessary Packages
+Uses Python3 with the following packages:
+- numpy
+- os
+- sys
+- matplotlib
+
+### Execution
+1. Unzip D1_John_Ripple
+2. The execution command format is \
+    python3 ripple_skeleton.py [test]
+3. To compute training data run in terminal \
+    python3 ~/D1_John_Ripple/src/ripple_skeleton.py
+4. To compute test data run in terminal \
+    python3 ~/D1_John_Ripple/src/ripple_skeleton.py test
+
+If using an IDE, just open ripple_skeleton.py and run.
+
+### RAD Representation
+Joints [1, 4, 8, 12, 16, 20] are used in the RAD algorithm which corresponds to hip center, hands, feet, head, torso.
+
+### Histogram Computation
+For RAD, the data to calculate the histogram is in the format of:
+|List Row | Col 1   | Col 2 | ...|
+|   :---:   | :---: | :---: | :---:|
+| Frame1: | Joint 1 Data | Joint 2 Data | ... |
+| Frame 2: | Joint 1 Data | Joint 2 Data | ... |
+|   ... |   ... |   ... |
+
+To create a histogram of all data for one joint the data is first transposed into this:
+
+|List Row | Col 1   | Col 2 | ...|
+|   :---:   | :---: | :---: | :---:|
+| Frame1: | Frame 2: |  ... |
+| Joint 1 Data | Joint 1 Data | ... |
+|   Joint 2 Data |   Joint 2 Data |   ... |
+|   ... |   ... |   ... |
+
+Once all the data for a joint from a file is in a row, numpy.histogram can be used to create the histogram.
+
+np.histogram(distance_data[i], bins=np.linspace(min(distance_data[i]), max(distance_data[i]), num = 20))
+
+As shown above, 20 bins are used to give good resolution to each histogram and is constant across every histogram. The histogram range is determined on a per histogram basis by finding the max and min value in the data. This allows the histogram to not have any large stretches with no data because the range is larger than the data range.

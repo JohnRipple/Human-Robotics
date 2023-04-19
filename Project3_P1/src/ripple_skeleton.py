@@ -26,8 +26,9 @@ class Skeleton:
         self.hjpdWriteData = "" # Data to write to the cust_d1_xx.txt file
 
         # Read in the parameter from the roslaunch file
-        if sys.argv[1] == "test":
-            self.train = False
+        if len(sys.argv) > 1:
+            if sys.argv[1] == "test":
+                self.train = False
         else:
             self.train = True
         
