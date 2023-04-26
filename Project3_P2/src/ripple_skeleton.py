@@ -47,7 +47,9 @@ class Skeleton:
         
         # print(dist)
         for i in range(0, len(dist)):
+            # distHist, bins_dist = np.histogram(dist[i], bins=20)
             distHist, bins_dist = np.histogram(dist[i], bins=np.linspace(min(dist[i]), max(dist[i]), num = 20))
+
             distHist = distHist / float(len(dist[i]))
             if i != 0:
                 self.writeData += ' '
@@ -56,7 +58,9 @@ class Skeleton:
         self.writeData += ' '
 
         for i in range(0, len(angle)):
+            # angleHist, bins_angle = np.histogram(angle[i], bins=20)
             angleHist, bins_angle = np.histogram(angle[i], bins=np.linspace(min(angle[i]), max(angle[i]), num = 20))
+
             angleHist = angleHist / float(len(angle[i]))
             if i != 0:
                 self.writeData += ' '
@@ -81,7 +85,7 @@ class Skeleton:
             # self.showHist(hist_x, bins_x) 
             if i != 0:
                 self.hjpdWriteData += ' '
-            self.hjpdWriteData += ' '.join(map(str, hist_x)) + ' '.join(map(str, hist_y)) + ' '.join(map(str, hist_z))
+            self.hjpdWriteData += ' '.join(map(str, hist_x)) + ' ' + ' '.join(map(str, hist_y)) + ' ' + ' '.join(map(str, hist_z))
         self.hjpdWriteData += '\n'
 
 
@@ -196,11 +200,11 @@ class Skeleton:
             self.data = []
     
     
-    def mainLoop(self):
-        if self.train:
-            dataset_path = "train"
-        else:
-            dataset_path = "test"
+    def mainLoop(self, dataset_path):
+        # if self.train:
+        #     dataset_path = "train"
+        # else:
+        #     dataset_path = "test"
         save_path = os.path.join((__file__).replace("ripple_skeleton.py", ""), os.pardir, "saved_files/", "rad_d1_" + dataset_path + ".txt")
         save_path_cust = os.path.join((__file__).replace("ripple_skeleton.py", ""), os.pardir,"saved_files/","cust_d1_" + dataset_path +".txt")
         path = os.path.join((__file__).replace("ripple_skeleton.py", ""), os.pardir, "dataset/", dataset_path)
@@ -221,7 +225,9 @@ class Skeleton:
                     self.hjpd(line)     # HJPD algorithim
                 self.calcHistogram()    # Calculate the RAD histogram
                 self.calHJPDHist()      # Calculate the HJPD histogram
+                # Format of 'action joint1Dist joint2Dist... jointNDist joint1Angle joint2Angle... jointNAngle
                 save_file.write(filename[0:3] + ' ' + self.writeData)
+                # Format of 'action joint1X joint1Y joint1Z... jointNX jointNY jointNZ
                 save_file_cust.write(filename[0:3] + ' ' + self.hjpdWriteData)
         save_file.close()
         save_file_cust.close()
@@ -231,7 +237,8 @@ class Skeleton:
 if __name__ == '__main__':
     skeleton = Skeleton()
     try:
-        skeleton.mainLoop()
+        skeleton.mainLoop("train")
+        skeleton.mainLoop('test')
     except KeyboardInterrupt:
         print("\nExiting")
         pass
