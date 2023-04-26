@@ -10,6 +10,11 @@ import sys
 import numpy as np
 
 
+
+def createSVM(dist, angle):
+    support_vector = sv
+
+
 def radData(data_line):
     joint_dist = [] # Structured as [[joint 1 dist], [joint 2 dist]]
     joint_angle = [] # Structured as [[joint 1 angle], [joint 2 angle]]
