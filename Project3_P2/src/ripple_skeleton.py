@@ -160,7 +160,7 @@ class Skeleton:
         hjpd_vec_y = []
         hjpd_vec_z = []
         # print(self.hjpd_data)
-        for i in range(1, len(self.hjpd_data)):
+        for i in range(0, len(self.hjpd_data)):
             hjpd_vec_x.append(self.hjpd_data[i][2] - self.hjpd_data[0][2])
             hjpd_vec_y.append(self.hjpd_data[i][3] - self.hjpd_data[0][3])
             hjpd_vec_z.append(self.hjpd_data[i][4] - self.hjpd_data[0][4])
@@ -188,6 +188,7 @@ class Skeleton:
     def findStar(self, line):
         '''Find the star joint positions for the RAD algorithim'''
         desired_joints = [1, 4, 8, 12, 16, 20]  # Desired joint positions (hands, feet, head, torso)
+        # desired_joints = [1, 3, 6, 10, 14, 18]
         data = self.stripData(line)
         # print(data)
         if data[1] in desired_joints:

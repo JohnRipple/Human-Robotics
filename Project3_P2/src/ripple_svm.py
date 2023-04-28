@@ -5,6 +5,8 @@
 # 4/28/2023
 
 from sklearn import svm
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
 from sklearn import metrics
 import os
 import sys
@@ -12,12 +14,50 @@ import numpy as np
 
 class createSVM:
     def __init__(self):
-        parameters =   [{'C': [0.001, 0.01, 0.1, 1, 10, 100, 1000],
+        self.parameters =   {'C': [0.001, 0.01, 0.1, 1, 10, 100, 1000],
             'kernel': ['rbf', 'linear', 'poly', 'sigmoid'],
-            'gamma': ['auto', 1, 0.1, 0.02, 0.001]}]
+            'gamma': ['auto', 1, 0.1, 0.02, 0.001]}
         self.support_vec_rad = svm.SVC(kernel="rbf", C=0.6, gamma=1)
         self.support_vec_hjpd = svm.SVC(kernel="rbf", C=1.0, gamma=0.7)
+        self.dataRADtrain = []
+        self.actionRADtrain = []
+        self.dataRADtest = []
+        self.actionRADtest = []
+        self.dataHJPDtrain = []
+        self.actionHJPDtrain = []
+        self.dataHJPDtest = []
+        self.actionHJPDtest = []
+        # self.clf = make_pipeline(StandardScaler(), svm.SVC(gamma='auto'))
 
+
+
+    def evalSVM(self):
+        y_test = np.array(self.actionRADtest).T
+        for k, v in self.parameters.items():
+            for val in v:
+                self.clf = svm.SVC().set_params(**{k: val})
+                self.clf.fit(self.dataRADtrain, np.array(self.actionRADtrain).T)
+                predicted = self.clf.predict(self.dataRADtest)
+                # print(self.clf,  self.clf.score(self.dataRADtest, np.array(self.actionRADtest).T))
+                print(self.clf)
+                print("Precision: ",  metrics.precision_score(y_test, predicted, average=None, zero_division=0))
+                print("Accuracy: ",metrics.accuracy_score(y_test, predicted))
+                print("Confusion Matrix:\n",metrics.confusion_matrix(y_test, predicted))
+                
+    
+    def evalSVMHJPD(self):
+        y_test = np.array(self.actionHJPDtest).T
+        for k, v in self.parameters.items():
+            for val in v:
+                self.clf = svm.SVC().set_params(**{k: val})
+                self.clf.fit(self.dataHJPDtrain, np.array(self.actionHJPDtrain).T)
+                predicted = self.clf.predict(self.dataHJPDtest)
+                # print(self.clf,  self.clf.score(self.dataHJPDtest, np.array(self.actionHJPDtest).T))
+                print(self.clf)
+                print("Precision: ",  metrics.precision_score(y_test, predicted, average=None, zero_division=0))
+                print("Accuracy: ",metrics.accuracy_score(y_test, predicted))
+                print("Confusion Matrix:\n",metrics.confusion_matrix(y_test, predicted))
+                
 
     def radData(self, data_line, action):
         joint_dist = [] # Structured as [[joint 1 dist], [joint 2 dist]]
@@ -65,14 +105,28 @@ class createSVM:
 
                 if filename is file[0]:
                     # self.radSVM(data, action)
-                    self.support_vec_rad.fit(data, np.array(action).T)
+                    self.dataRADtrain = data
+                    self.actionRADtrain = action
+                    # self.support_vec_rad.fit(data, np.array(action).T)
+                    # self.clf.fit(data, np.array(action).T)
                 elif filename is file[1]:
-                    print("RAD Accuracy:", self.support_vec_rad.score(data, np.array(action).T))
+                    self.dataRADtest = data
+                    self.actionRADtest = action
+                    # print("RAD Accuracy:", self.support_vec_rad.score(data, np.array(action).T))
+                    # print("RAD Accuracy CLF:", self.clf.score(data, np.array(action).T))
                     #self.radSVMTest(data, action)
+                    print("Testing SVM for RAD")
+                    self.evalSVM()
                 elif filename is file[2]:
-                    self.support_vec_hjpd.fit(data, np.array(action).T)
+                    self.dataHJPDtrain = data
+                    self.actionHJPDtrain = action
+                    # self.support_vec_hjpd.fit(data, np.array(action).T)
                 elif filename is file[3]:
-                    print("HJPD Accuracy:", self.support_vec_hjpd.score(data, np.array(action).T))
+                    self.dataHJPDtest = data
+                    self.actionHJPDtest = action
+                    print("\nTesting SVM for HJPD")
+                    self.evalSVMHJPD()
+                    # print("HJPD Accuracy:", self.support_vec_hjpd.score(data, np.array(action).T))
 
 
 
