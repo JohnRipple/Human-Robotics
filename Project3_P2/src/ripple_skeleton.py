@@ -185,9 +185,9 @@ class Skeleton:
             self.hjpd_data = []
 
 
-    def findStar(self, line):
+    def findStar(self, line, desired_joints):
         '''Find the star joint positions for the RAD algorithim'''
-        desired_joints = [1, 4, 8, 12, 16, 20]  # Desired joint positions (hands, feet, head, torso)
+        #desired_joints = [1, 4, 8, 12, 16, 20]  # Desired joint positions (hands, feet, head, torso)
         # desired_joints = [1, 3, 6, 10, 14, 18]
         data = self.stripData(line)
         # print(data)
@@ -198,22 +198,23 @@ class Skeleton:
             if not self.nan:
                 self.calcDistance() # Calculate distance between joints
                 self.calcAngle()    # Calculate angle between joints
+            self.nan = False
             self.data = []
     
     
-    def mainLoop(self, dataset_path):
+    def mainLoop(self, dataset_path, alg, joints):
         # if self.train:
         #     dataset_path = "train"
         # else:
         #     dataset_path = "test"
-        save_path = os.path.join((__file__).replace("ripple_skeleton.py", ""), os.pardir, "saved_files/", "rad_d1_" + dataset_path + ".txt")
-        save_path_cust = os.path.join((__file__).replace("ripple_skeleton.py", ""), os.pardir,"saved_files/","cust_d1_" + dataset_path +".txt")
+        save_path = os.path.join((__file__).replace("ripple_skeleton.py", ""), os.pardir, "saved_files/", alg + dataset_path + ".txt")
+        #save_path_cust = os.path.join((__file__).replace("ripple_skeleton.py", ""), os.pardir,"saved_files/","cust_d1_" + dataset_path +".txt")
         path = os.path.join((__file__).replace("ripple_skeleton.py", ""), os.pardir, "dataset/", dataset_path)
         print(save_path)
         open(save_path, 'w').close()    # Clear contents of the file
         save_file = open(save_path, 'w')
-        open(save_path_cust, 'w').close()    # Clear contents of the file
-        save_file_cust = open(save_path_cust, 'w')
+        #open(save_path_cust, 'w').close()    # Clear contents of the file
+        #save_file_cust = open(save_path_cust, 'w')
         for filename in os.listdir(path):
             print(filename)
             self.distance = []  # Reset distance and angle for new file
@@ -222,24 +223,26 @@ class Skeleton:
             self.hjpdWriteData = ""
             with open(os.path.join(path, filename), 'r') as f:
                 for i, line in enumerate(f):
-                    self.findStar(line) # RAD algorithim
-                    self.hjpd(line)     # HJPD algorithim
+                    self.findStar(line, joints) # RAD algorithim
+                    #self.hjpd(line)     # HJPD algorithim
                 self.calcHistogram()    # Calculate the RAD histogram
-                self.calHJPDHist()      # Calculate the HJPD histogram
+                #self.calHJPDHist()      # Calculate the HJPD histogram
                 # Format of 'action joint1Dist joint2Dist... jointNDist joint1Angle joint2Angle... jointNAngle
                 save_file.write(filename[0:3] + ' ' + self.writeData)
                 # Format of 'action joint1X joint1Y joint1Z... jointNX jointNY jointNZ
-                save_file_cust.write(filename[0:3] + ' ' + self.hjpdWriteData)
+                #save_file_cust.write(filename[0:3] + ' ' + self.hjpdWriteData)
         save_file.close()
-        save_file_cust.close()
+        #save_file_cust.close()
 
     
 
 if __name__ == '__main__':
     skeleton = Skeleton()
     try:
-        skeleton.mainLoop("train")
-        skeleton.mainLoop('test')
+        skeleton.mainLoop("train", "rad_d1_", [1, 4, 8, 12, 16, 20])
+        skeleton.mainLoop('test', "rad_d1_", [1, 4, 8, 12, 16, 20])
+        skeleton.mainLoop("train", "cust_d1_", [1, 4, 6, 10, 14, 18])
+        skeleton.mainLoop('test', "cust_d1_", [1, 4, 6, 10, 14, 18])
     except KeyboardInterrupt:
         print("\nExiting")
         pass

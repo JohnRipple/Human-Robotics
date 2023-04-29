@@ -9,20 +9,23 @@ Uses Python3 with the following packages:
 - os
 - sys
 - matplotlib
+- sklearn
 
 ### Execution
-1. Unzip D1_John_Ripple
-2. The execution command format is \
-    python3 ripple_skeleton.py [test]
-3. To compute training data run in terminal \
-    python3 ~/D1_John_Ripple/src/ripple_skeleton.py
-4. To compute test data run in terminal \
-    python3 ~/D1_John_Ripple/src/ripple_skeleton.py test
+1. Unzip D2_John_Ripple and move to folder in terminal
+    cd ~/D2_John_Ripple
+2. The execution command for featurization is \
+    python3 src/ripple_skeleton.py
+3. The execution command SVM is \
+    python3 src/ripple_svm.py
 
-If using an IDE, just open ripple_skeleton.py and run.
+If using an IDE, just open ripple_skeleton.py or ripple_svm.py and run.
 
 ### RAD Representation
 Joints [1, 4, 8, 12, 16, 20] are used in the RAD algorithm which corresponds to hip center, hands, feet, head, torso.
+
+### Custom Representation
+Uses the same RAD algorithim but uses joints [1, 4, 6, 10, 14, 18] which corresponds to hip center, head, elbow left, elbo right, knee left, knee right
 
 ### Histogram Computation
 For RAD, the data to calculate the histogram is in the format of:
@@ -46,3 +49,6 @@ Once all the data for a joint from a file is in a row, numpy.histogram can be us
 np.histogram(distance_data[i], bins=np.linspace(min(distance_data[i]), max(distance_data[i]), num = 20))
 
 As shown above, 20 bins are used to give good resolution to each histogram and is constant across every histogram. The histogram range is determined on a per histogram basis by finding the max and min value in the data. This allows the histogram to not have any large stretches with no data because the range is larger than the data range.
+
+### SVM computation
+The featurized data created by ripple_skeleton.py is run through ripple_svm.py to create multiple different SVMs with varying parameters. Each SVM outputs its accuracy, precision, and confusion matrix to saved_files/SVM Results.txt.
