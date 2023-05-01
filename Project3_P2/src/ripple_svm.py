@@ -13,13 +13,13 @@ import numpy as np
 class createSVM:
     def __init__(self):
         # Create a number of parameters for various SVM testing
-        self.parameters =   {'C': [0.001, 0.01, 0.1, 1, 10, 100, 1000],
+        self.parameters =   {'C': [0.000000001, 0.001, 0.1, 1, 100, 1000],
             'kernel': ['rbf', 'linear', 'poly', 'sigmoid'],
-            'gamma': ['auto', 1, 0.1, 0.02, 0.001]}
+            'gamma': ['auto', 1000, 10, 5, 1,.71, 0.715, 0.3, 0.1, 0.02, 0.001]}
         
         # Final SVM with best parameters
         self.support_vec_rad = svm.SVC(kernel="rbf", C=0.6, gamma=1)
-        self.support_vec_hjpd = svm.SVC(kernel="rbf", C=9.0, gamma=0.7)
+        self.support_vec_hjpd = svm.SVC(kernel="rbf", C=1.4, gamma=1.4428277988297817)
         
         # Create values to store data for SVM testing at various parameters
         self.dataRADtrain = []
@@ -57,7 +57,7 @@ class createSVM:
                 self.clf.fit(data_train, np.array(action_train).T)  # Fit the SVM based on training data
                 predicted = self.clf.predict(data_test)             # Predict class based on SVM
                 print(self.clf)                                     # Print the clf with the different parameter
-                self.save_file.write("\n\\\\\\\\" + str(self.clf))
+                self.save_file.write("\n" + str(self.clf))
                 self.printResults(y_test, predicted)                # print results
 
                 
@@ -66,8 +66,10 @@ class createSVM:
         """Print the scores of the SVM"""
         precision = "Precision: " +  str(metrics.precision_score(y_test, predicted, average=None, zero_division=0))
         accuracy = "Accuracy: " + str(metrics.accuracy_score(y_test, predicted))
-        confusion = "Confusion Matrix:\n" + self.bmatrix(metrics.confusion_matrix(y_test, predicted))
-        self.save_file.write("\n\\\\" + precision + "\n\\\\" +  accuracy + "\n\\\\" + confusion + "\\\\")
+        #confusion = "Confusion Matrix:\n" + self.bmatrix(metrics.confusion_matrix(y_test, predicted))
+        confusion = "Confusion Matrix:\n" + str(metrics.confusion_matrix(y_test, predicted))
+
+        self.save_file.write("\n" + precision + "\n" +  accuracy + "\n" + confusion + "")
         print(precision, accuracy, confusion)
         
         
@@ -102,9 +104,9 @@ class createSVM:
                     self.actionRADtest = action
 
                     # Display SVM metrics for the test data
-                    print("Testing SVM for RAD\\\\")
+                    print("Testing SVM for RAD")
                     print(self.support_vec_rad)
-                    self.save_file.write("SVM results for RAD\\\\\nBest SVM found (rbf): " + str(self.support_vec_rad))
+                    self.save_file.write("SVM results for RAD\nBest SVM found (rbf): " + str(self.support_vec_rad))
                     self.printResults(np.array(action).T, self.support_vec_rad.predict(data))
                     self.evalSVM(self.dataRADtrain, self.actionRADtrain, self.dataRADtest, self.actionRADtest)
                 elif filename is file[2]:
@@ -120,12 +122,13 @@ class createSVM:
                     self.actionHJPDtest = action
                     
                     # Display SVM metrics for the test data
-                    print("\nTesting SVM for HJPD\\\\")
+                    print("\nTesting SVM for HJPD")
                     print(self.support_vec_hjpd)
                     self.save_file.write("\n\n\n\n#####################################################################################\n\n\n\n")
-                    self.save_file.write("SVM results for Custom\\\\\nBest SVM found (rbf): " + str(self.support_vec_hjpd))
+                    self.save_file.write("SVM results for Custom\nBest SVM found (rbf): " + str(self.support_vec_hjpd))
                     self.printResults(np.array(action).T, self.support_vec_hjpd.predict(data))
                     self.evalSVM(self.dataHJPDtrain, self.actionHJPDtrain, self.dataHJPDtest, self.actionHJPDtest)
+                    #print(1 / (np.array(self.dataHJPDtrain).shape[1] * np.array(self.dataHJPDtrain).var()))
         self.save_file.close()
  
 
